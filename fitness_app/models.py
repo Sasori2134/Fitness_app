@@ -15,16 +15,17 @@ class Exercise(models.Model):
     def __str__(self):
         return f'{self.name} | {self.type} | {self.target_muscles}'
 
+
 class Workoutplan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     weekday = models.CharField(max_length=9, choices=[
-        ('mon','monday'),
-        ('tue','tuesday'),
-        ('wed','wednesday'),
-        ('thur','thursday'),
-        ('fri','friday'),
-        ('sat','saturday'),
-        ('sun','sunday')
+        ('monday','monday'),
+        ('tuesday','tuesday'),
+        ('wednesday','wednesday'),
+        ('thursday','thursday'),
+        ('friday','friday'),
+        ('saturday','saturday'),
+        ('sunday','sunday')
     ])
     exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
     reps = models.PositiveIntegerField(validators=[MinValueValidator(1)], null=True)
@@ -33,19 +34,9 @@ class Workoutplan(models.Model):
     duration = models.DecimalField(max_digits=4, decimal_places=2, null=True)
     priority = models.PositiveIntegerField(validators=[MinValueValidator(1)])
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields = ['user', 'weekday', 'priority'],
-                name = "Unique_Constraint_for_workout"
-            ),
-            models.UniqueConstraint(
-                fields = ['user', 'weekday'],
-                name = "Unique_Constraint_for_user_weekday"
-            )
-        ]
     def __str__(self):
         return f'{self.user} | {self.weekday} | {self.exercise} | {self.priority}'
+
 
 # class WorkoutDone(models.Model):
 #     user = models.ForeignKey(User, on_delete=models.CASCADE)

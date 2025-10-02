@@ -12,7 +12,15 @@ class ExerciseSerializer(ModelSerializer):
 class AddWorkoutSerializer(ModelSerializer):
     class Meta:
         model = models.Workoutplan
-        fields = "__all__"
+        fields = [
+            'weekday',
+            'exercise',
+            'reps',
+            'sets',
+            'distance',
+            'duration',
+            'priority'
+        ]
 
     def validate(self, data):
         user = self.context.get('request').user

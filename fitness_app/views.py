@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Exercise, Workoutplan
+from django.db.models import F
 
 class RegisterApiView(APIView):
     permissions_classes = [AllowAny]
@@ -38,14 +39,21 @@ class DeleteExercisesApiView(generics.DestroyAPIView):
 class AddWorkoutApiView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = serializers.AddWorkoutSerializer
+
     
     def perform_create(self, serializer):
+        workouts = Workoutplan.objects.filter(user = self.request.user, weekday = serializer.validated_data.get("weekday"), priority__gte = serializer.validated_data.get('priority')).update(priority = F("priority") + 1)
         serializer.save(user = self.request.user)
 
 
 class DeleteWorkoutApiView(generics.DestroyAPIView):
     permission_classes = [custom_permissions.IsOwner, IsAuthenticated]
     
+    def perform_destroy(self, instance):
+        priority = instance.priority
+        instance.delete()
+        Workoutplan.objects.filter(user = self.request.user, weekday = instance.weekday, priority__gt = priority).update(priority = F("priority") -1)
+
     def get_queryset(self):
         return Workoutplan.objects.filter(user = self.request.user)
 
