@@ -28,6 +28,16 @@ class ListExercisesApiView(generics.ListAPIView):
     queryset = Exercise.objects.all()
 
 
+class DeleteExerrcisesApiView(generics.DestroyAPIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = serializers.ExerciseSerializer
+
+
+# implement Functionality for users to create tailored workout plans, specifying
+# workout frequency, goals, exercise types, and daily session duration
+
+
+
 class LogoutApiView(APIView):
     permissions_classes = [IsAuthenticated]
 

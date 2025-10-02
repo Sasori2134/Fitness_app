@@ -9,5 +9,6 @@ urlpatterns = [
     path('api/register/', views.RegisterApiView.as_view()),
     path('api/log_out/', views.LogoutApiView.as_view()),
     path('api/addexercise/', views.CreateExercisesApiView.as_view()),
-    path('api/listexercise/', views.ListExercisesApiView.as_view())
+    path('api/listexercise/', views.ListExercisesApiView.as_view()),
+    path('api/deleteexercise/<int:pk>', views.DeleteExerrcisesApiView.as_view())
 ]
