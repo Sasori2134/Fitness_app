@@ -33,11 +33,16 @@ class Workoutplan(models.Model):
     distance = models.DecimalField(max_digits=5, decimal_places=2, null=True)
     duration = models.DecimalField(max_digits=4, decimal_places=2, null=True)
     priority = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.user} | {self.weekday} | {self.exercise} | {self.priority}'
+        return f'{self.pk} | {self.user} | {self.weekday} | {self.exercise} | {self.priority}'
 
 
-# class WorkoutDone(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     workout = models.ForeignKey(Workoutplan, on_delete=models.CASCADE)
+class CompletedWorkouts(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    workout = models.ForeignKey(Workoutplan, on_delete=models.CASCADE)
+    completion_date = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.pk} | {self.user} | {self.completion_date}'

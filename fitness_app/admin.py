@@ -3,5 +3,6 @@ from . import models
 
 admin.site.register(models.Exercise)
 admin.site.register(models.Workoutplan)
+admin.site.register(models.CompletedWorkouts)
 
 
