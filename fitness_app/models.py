@@ -30,7 +30,7 @@ class Workoutplan(models.Model):
     exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
     reps = models.PositiveIntegerField(validators=[MinValueValidator(1)], null=True)
     sets = models.PositiveIntegerField(validators=[MinValueValidator(1)], null=True)
-    distance = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    distance = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     duration = models.DecimalField(max_digits=4, decimal_places=2, null=True)
     priority = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     deleted = models.BooleanField(default=False)

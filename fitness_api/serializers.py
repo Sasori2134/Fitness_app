@@ -1,6 +1,37 @@
 from rest_framework import serializers
 from fitness_app import models
 from rest_framework.exceptions import ValidationError
+from decimal import Decimal
+from django.contrib.auth.models import User
+from django.core.validators import RegexValidator, MinLengthValidator, MaxLengthValidator
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    goal_weight = serializers.DecimalField(min_value = Decimal(1), max_digits=5, decimal_places=2)
+    password = serializers.CharField(write_only = True, validators = [
+        RegexValidator(
+            regex = r'^(?=(?:.*\d){3,}).+$',
+            message = "You have to include at least 3 numbers"
+        ),
+        MinLengthValidator(
+            limit_value = 8,
+            message = "Your password has to be at least 8 characters long"
+        ),
+        MaxLengthValidator(
+            limit_value = 50,
+            message = "Your password can't be more than 50 characters"
+        )
+
+    ])
+    class Meta:
+        model = User
+        fields = [
+            'username',
+            'password',
+            'goal_weight'
+        ]
+
+
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -11,6 +42,8 @@ class ExerciseSerializer(serializers.ModelSerializer):
 
 class AddWorkoutSerializer(serializers.ModelSerializer):
     deleted = serializers.BooleanField(read_only = True)
+    distance = serializers.DecimalField(min_value = Decimal(1), max_digits=10, decimal_places=2)
+    duration = serializers.DecimalField(min_value = 0.3, max_digits=4, decimal_places=2)
     class Meta:
         model = models.Workoutplan
         fields = [
@@ -49,4 +82,24 @@ class DeleteWorkoutSerializer(serializers.ModelSerializer):
             'duration',
             'priority',
             'deleted'
+        ]
+
+
+
+class WeightEntrySerializer(serializers.ModelSerializer):
+    weight = serializers.DecimalField(min_value=Decimal(1), max_digits=5, decimal_places=2)
+    date = serializers.DateField(read_only = True)
+    class Meta:
+        model = models.WeightEntry
+        fields = [
+            'weight',
+            'date'
+        ]
+
+class GoalWeightSerializer(serializers.ModelSerializer):
+    goal_weight = serializers.DecimalField(min_value = Decimal(1), max_digits=5, decimal_places=2)
+    class Meta:
+        model = models.GoalWeight
+        fields = [
+            'goal_weight'
         ]

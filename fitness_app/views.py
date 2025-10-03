@@ -5,19 +5,27 @@ from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Exercise, Workoutplan, CompletedWorkouts
+from .models import Exercise, Workoutplan, CompletedWorkouts, WeightEntry, GoalWeight
 from django.db.models import F
 from datetime import datetime
 from datetime import date
+from django.db.utils import IntegrityError
+from django.db import transaction
 
 class RegisterApiView(APIView):
-    permissions_classes = [AllowAny]
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        user = User.objects.create_user(username = request.data.get('username'), password = request.data.get('password'))
-        if user:
-            return Response(status=201)
-        return Response(status=401)
+        try:
+            serialized = serializers.RegisterSerializer(data = request.data)
+            if serialized.is_valid(raise_exception = True):
+                with transaction.atomic():
+                    user = User.objects.create_user(username = serialized.validated_data.get('username'), password = serialized.validated_data.get('password'))
+                    GoalWeight.objects.create(user = user, goal_weight = serialized.validated_data.get('goal_weight'))
+            return Response({'message' : 'Register Successful'}, status=201)
+        except IntegrityError:
+            return Response({'message' : 'This username is already in use'}, status=409)
+        
 
 
 class CreateExercisesApiView(generics.CreateAPIView):
@@ -46,11 +54,23 @@ class AddWorkoutApiView(generics.CreateAPIView):
         serializer.save(user = self.request.user)
 
     
+class UpdateWorkoutApiView(generics.UpdateAPIView):
+    permission_classes = [custom_permissions.IsOwner, IsAuthenticated]
+    serializer_class = serializers.AddWorkoutSerializer
+    lookup_field = 'pk'
+
+    def get_queryset(self):
+        return Workoutplan.objects.filter(user = self.request.user)
+    
+
 class DeleteWorkoutApiView(APIView):
     permission_classes = [custom_permissions.IsOwner,IsAuthenticated]
 
     def patch(self, request, pk):
-        instance = Workoutplan.objects.get(pk = pk)
+        try:
+            instance = Workoutplan.objects.get(pk = pk)
+        except Workoutplan.DoesNotExist:
+            return Response({'message' : 'Workout doesnt exist'})
         serialized = serializers.DeleteWorkoutSerializer(instance, data = {'deleted' : True}, partial = True)
         if serialized.is_valid(raise_exception=True):
             serialized.save()
@@ -65,8 +85,9 @@ class ListWorkoutsForTodayApiView(generics.ListAPIView):
     def get_queryset(self):
         return Workoutplan.objects.filter(user = self.request.user, deleted = False, weekday = datetime.now().strftime('%A').lower()).order_by('priority')
 
-#Have to check if this workout was done today
+
 class CompleteExerciseTodayApiView(APIView):
+    permission_classes = [custom_permissions.IsOwner ,IsAuthenticated]
     def post(self, request, pk):
         try:
             completed_workout = Workoutplan.objects.get(pk = pk, weekday = datetime.now().strftime('%A').lower())
@@ -87,11 +108,40 @@ class CompleteExerciseTodayApiView(APIView):
             serialized = serializers.DeleteWorkoutSerializer(next_workout)
             return Response(serialized.data)
         return Response({'message' : 'You have already completed this exercise'})
+    
+
+class WeightEntryApiView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.WeightEntrySerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user = self.request.user)
+
+
+class DeleteWeightEntryApiView(generics.DestroyAPIView):
+    permission_classes = [custom_permissions.IsOwner, IsAuthenticated]
+    serializer_class = serializers.WeightEntrySerializer
+
+    def get_queryset(self):
+        return WeightEntry.objects.filter(user = self.request.user)
+
+
+class RetrieveUpdateGoalWeightApiView(generics.RetrieveUpdateAPIView):
+    permission_classes = [custom_permissions.IsOwner, IsAuthenticated]
+    serializer_class = serializers.GoalWeightSerializer
+    lookup_field = 'pk'
+
+    def get_queryset(self):
+        return GoalWeight.objects.filter(user = self.request.user)
+
 
 class LogoutApiView(APIView):
-    permissions_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        refresh_token = RefreshToken(request.data.get('refresh_token'))
-        refresh_token.blacklist()
+        try:
+            refresh_token = RefreshToken(request.data.get('refresh_token'))
+            refresh_token.blacklist()
+        except:
+            return Response(status=401)
         return Response(status=200)
