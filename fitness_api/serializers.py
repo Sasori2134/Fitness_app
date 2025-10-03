@@ -43,7 +43,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
 class AddWorkoutSerializer(serializers.ModelSerializer):
     deleted = serializers.BooleanField(read_only = True)
     distance = serializers.DecimalField(min_value = Decimal(1), max_digits=10, decimal_places=2)
-    duration = serializers.DecimalField(min_value = 0.3, max_digits=4, decimal_places=2)
+    duration = serializers.DecimalField(min_value = Decimal(0.3), max_digits=4, decimal_places=2)
     class Meta:
         model = models.Workoutplan
         fields = [
