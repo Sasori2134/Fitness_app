@@ -46,3 +46,36 @@ class CompletedWorkouts(models.Model):
 
     def __str__(self):
         return f'{self.pk} | {self.user} | {self.completion_date}'
+
+
+class WeightEntry(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    weight = models.DecimalField(max_digits=5, decimal_places=2)
+    date = models.DateField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                name = 'unique_constraint_weightEntry',
+                fields = ['user', 'date']
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} | {self.weight} | {self.date}"
+
+
+class GoalWeight(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    goal_weight = models.DecimalField(max_digits=5, decimal_places=2)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                name = 'unique_constraint_user_goal_weight',
+                fields = ['user', 'goal_weight']
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} | {self.goal_weight}"
